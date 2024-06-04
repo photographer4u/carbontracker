@@ -1,40 +1,60 @@
-import altair as alt
-import numpy as np
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
-"""
-# Welcome to Streamlit!
+# Initialize session state for data storage
+if 'data' not in st.session_state:
+    st.session_state.data = pd.DataFrame(columns=['Activity', 'Carbon (kg)'])
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+if 'goals' not in st.session_state:
+    st.session_state.goals = []
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+# Function to add new data
+def add_data(activity, carbon):
+    new_data = pd.DataFrame([[activity, carbon]], columns=['Activity', 'Carbon (kg)'])
+    st.session_state.data = pd.concat([st.session_state.data, new_data], ignore_index=True)
 
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
+# Function to add new goal
+def add_goal(goal):
+    st.session_state.goals.append(goal)
 
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
+# Sidebar for data entry
+st.sidebar.header('Data Entry')
+activity = st.sidebar.text_input('Activity')
+carbon = st.sidebar.number_input('Carbon (kg)', min_value=0.0)
 
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
+if st.sidebar.button('Add Data'):
+    add_data(activity, carbon)
+    st.sidebar.success('Data added!')
 
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
+# Sidebar for goal setting
+st.sidebar.header('Set Goals')
+goal = st.sidebar.text_input('Goal')
 
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
+if st.sidebar.button('Add Goal'):
+    add_goal(goal)
+    st.sidebar.success('Goal added!')
+
+# Main Dashboard
+st.title('Digital Carbon Footprint Tracker')
+
+# Data Visualization
+st.header('Visualization')
+if not st.session_state.data.empty:
+    st.line_chart(st.session_state.data.set_index('Activity'))
+
+# Data Reporting
+st.header('Report')
+st.write(st.session_state.data)
+
+# Goal Display
+st.header('Goals')
+if st.session_state.goals:
+    st.write(st.session_state.goals)
+else:
+    st.write("No goals set yet.")
+
+# Total Carbon Calculation
+st.header('Total Carbon Footprint')
+total_carbon = st.session_state.data['Carbon (kg)'].sum()
+st.write(f'Total Carbon Footprint: {total_carbon} kg CO2')
