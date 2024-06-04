@@ -41,7 +41,9 @@ st.title('Digital Carbon Footprint Tracker')
 # Data Visualization
 st.header('Visualization')
 if not st.session_state.data.empty:
-    st.line_chart(st.session_state.data.set_index('Activity'))
+    fig, ax = plt.subplots()
+    st.session_state.data.plot(kind='line', x='Activity', y='Carbon (kg)', ax=ax)
+    st.pyplot(fig)
 
 # Data Reporting
 st.header('Report')
